@@ -3,119 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#111111">
+  <meta name="theme-color" content="#0b0d0b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Der große Coup">
-  <title>Der große Coup</title>
+  <title>Der große Coup 0.2.1</title>
   <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main id="app">
-    <section id="start" class="screen active">
-      <div class="panel title-panel">
-        <h1>DER GROSSE COUP</h1>
-        <div class="subtitle">Strategisches Retrospiel · Version 0.1</div>
-        <p>Plane den Einsatz, stelle Dein Team zusammen und beobachte die automatische Durchführung. Ziel ist es, beide Coups erfolgreich abzuschließen.</p>
-        <div class="row">
-          <button id="newGameBtn" class="primary">Neues Spiel</button>
-          <button id="continueBtn">Fortsetzen</button>
-        </div>
+<main id="app">
+  <section id="start" class="screen active">
+    <div class="panel title-panel">
+      <div class="eyebrow">RETRO-TAKTIKSIMULATION</div>
+      <h1>DER GROSSE COUP</h1>
+      <div class="subtitle">Version 0.2.1 · Interaktive Missionskarten</div>
+      <p>Plane die Wege Deiner Spezialisten direkt auf dem Gebäudegrundriss. Der Einsatz folgt anschließend genau Deinem Plan.</p>
+      <div class="row">
+        <button id="newGameBtn" class="primary">Neues Spiel</button>
+        <button id="continueBtn">Fortsetzen</button>
       </div>
-      <div class="panel small">Der Spielstand wird ausschließlich lokal auf diesem Gerät gespeichert.</div>
-    </section>
+    </div>
+    <div class="panel small">Spielstand und Missionspläne werden lokal auf diesem Gerät gespeichert.</div>
+  </section>
 
-    <section id="hq" class="screen">
-      <div class="panel">
-        <div class="row">
-          <h2 class="grow">Hauptquartier</h2>
-          <div class="stat">Kapital: <span id="money">10.000 €</span></div>
-          <div class="stat">Fahndung: <span id="heat">0</span>/5</div>
-        </div>
+  <section id="hq" class="screen">
+    <header class="panel topbar">
+      <div>
+        <div class="eyebrow">HAUPTQUARTIER</div>
+        <h2>Auftragskartei</h2>
       </div>
-      <div id="missionList"></div>
-      <button id="backToTitleBtn">Zum Titel</button>
-    </section>
+      <div class="row">
+        <div class="stat">Kapital <strong id="money">10.000 €</strong></div>
+        <div class="stat">Fahndung <strong id="heat">0/5</strong></div>
+        <div class="version-tag">v0.2.1</div>
+      </div>
+    </header>
+    <div id="missionList"></div>
+    <button id="backToTitleBtn">Zum Titel</button>
+  </section>
 
-    <section id="planning" class="screen">
-      <div class="panel">
-        <div class="row">
-          <h2 id="planTitle" class="grow"></h2>
-          <div class="stat">Einsatzbudget: <span id="budget"></span></div>
-        </div>
+  <section id="planning" class="screen planning-screen">
+    <header class="panel mission-header">
+      <div>
+        <div class="eyebrow">MISSIONSPLANUNG</div>
+        <h2 id="planTitle"></h2>
         <p id="planDesc"></p>
       </div>
-
-      <div class="grid2">
-        <div class="panel">
-          <h3>Team auswählen</h3>
-          <div id="crewList" class="grid2"></div>
-        </div>
-        <div class="panel">
-          <h3>Ausrüstung</h3>
-          <label for="toolSelect">Werkzeug</label>
-          <select id="toolSelect"></select>
-          <label for="carSelect">Fahrzeug</label>
-          <select id="carSelect"></select>
-          <p class="small">Bessere Ausrüstung erhöht die Erfolgschance, kostet aber mehr.</p>
-        </div>
+      <div class="mission-stats">
+        <div class="stat">Budget <strong id="budget"></strong></div>
+        <div class="stat">Planzeit <strong id="planDuration">00:00</strong></div>
+        <div class="stat">Planstatus <strong id="planStatus">Ungeprüft</strong></div>
       </div>
+    </header>
 
-      <div class="panel">
-        <h3>Einsatzplan</h3>
-        <div class="table-wrap">
-          <table class="timeline">
-            <thead><tr><th>Phase</th><th>Aktion</th><th>Risiko</th></tr></thead>
-            <tbody id="timelineBody"></tbody>
-          </table>
+    <div class="planning-layout">
+      <aside class="panel side-panel">
+        <h3>Team</h3>
+        <p class="small">Figur antippen, anschließend verbundene Punkte auf der Karte wählen.</p>
+        <div id="crewList" class="crew-list"></div>
+        <h3 class="section-title">Ausrüstung</h3>
+        <label for="toolSelect">Werkzeug</label>
+        <select id="toolSelect"></select>
+        <label for="carSelect">Fahrzeug</label>
+        <select id="carSelect"></select>
+        <div id="costSummary" class="cost-summary"></div>
+      </aside>
+
+      <section class="panel map-panel">
+        <div class="map-toolbar">
+          <div class="legend">
+            <span><i class="legend-dot entry"></i>Zugang</span>
+            <span><i class="legend-dot objective"></i>Ziel</span>
+            <span><i class="legend-dot hazard"></i>Gefahr</span>
+            <span><i class="legend-dot exit"></i>Flucht</span>
+          </div>
+          <div class="row compact">
+            <button id="undoWaypointBtn">Letzten Punkt löschen</button>
+            <button id="clearRouteBtn">Route leeren</button>
+            <button id="clearAllRoutesBtn">Alle Routen leeren</button>
+          </div>
         </div>
-        <div class="row top-gap">
-          <button id="autoPlanBtn">Plan automatisch optimieren</button>
-          <button id="startMissionBtn" class="primary">Coup starten</button>
-          <button id="cancelPlanningBtn">Abbrechen</button>
+        <div id="mapFrame" class="map-frame" aria-label="Interaktiver Gebäudeplan">
+          <svg id="missionMap" viewBox="0 0 1000 620" role="img" aria-label="Gebäudegrundriss"></svg>
         </div>
+        <div id="mapHint" class="map-hint">Wähle links ein Teammitglied.</div>
+      </section>
+
+      <aside class="panel info-panel">
+        <h3>Zielinformationen</h3>
+        <div id="missionInfo"></div>
+        <h3 class="section-title">God-Modus</h3>
+        <label class="switch-row"><input id="godModeToggle" type="checkbox"> Entwickleranzeige aktivieren</label>
+        <div class="god-options">
+          <label><input id="showHazards" type="checkbox" checked> Gefahrenzonen</label>
+          <label><input id="showConnections" type="checkbox" checked> Verbindungen</label>
+          <label><input id="showTimes" type="checkbox" checked> Zeiten</label>
+        </div>
+        <button id="simulatePlanBtn" class="god-button">Plan prüfen</button>
+        <div id="godReport" class="god-report">Noch keine Prüfung durchgeführt.</div>
+      </aside>
+    </div>
+
+    <section class="panel timeline-panel">
+      <div class="row timeline-heading">
+        <h3>Einsatzplan – Zeitleiste</h3>
+        <div class="small">Karte und Zeitleiste werden automatisch synchronisiert.</div>
+      </div>
+      <div id="timelineGrid" class="timeline-grid"></div>
+      <div class="row actionbar">
+        <button id="autoPlanBtn">Musterplan laden</button>
+        <button id="savePlanBtn">Plan speichern</button>
+        <button id="startMissionBtn" class="primary">Einsatz starten</button>
+        <button id="cancelPlanningBtn">Zurück</button>
       </div>
     </section>
+  </section>
 
-    <section id="execution" class="screen">
-      <div class="panel">
-        <div class="row">
-          <h2 id="execTitle" class="grow"></h2>
-          <div class="stat">Alarm: <span id="alarm">0</span>/5</div>
+  <section id="execution" class="screen">
+    <header class="panel">
+      <div class="row">
+        <div class="grow">
+          <div class="eyebrow">DURCHFÜHRUNG</div>
+          <h2 id="execTitle"></h2>
         </div>
-        <div class="progress"><div id="progressBar"></div></div>
+        <div class="stat">Zeit <strong id="execClock">00:00</strong></div>
+        <div class="stat">Alarm <strong id="alarm">0/5</strong></div>
       </div>
-      <div class="grid2">
-        <div class="panel">
-          <h3>Lageplan</h3>
-          <div id="map" class="map"></div>
-        </div>
-        <div class="panel">
-          <h3>Einsatzprotokoll</h3>
-          <div id="log" class="log" aria-live="polite"></div>
-        </div>
-      </div>
-      <button id="abortBtn" class="danger">Einsatz abbrechen</button>
-    </section>
+      <div class="progress"><div id="progressBar"></div></div>
+    </header>
+    <div class="execution-layout">
+      <div class="panel map-panel"><svg id="executionMap" viewBox="0 0 1000 620"></svg></div>
+      <div class="panel"><h3>Einsatzprotokoll</h3><div id="log" class="log" aria-live="polite"></div></div>
+    </div>
+    <button id="abortBtn" class="danger">Einsatz abbrechen</button>
+  </section>
 
-    <section id="result" class="screen">
-      <div class="panel">
-        <h2 id="resultTitle"></h2>
-        <div id="resultText"></div>
-        <div class="row top-gap">
-          <button id="resultToHqBtn" class="primary">Zurück ins Hauptquartier</button>
-          <button id="restartBtn">Mission erneut versuchen</button>
-        </div>
+  <section id="result" class="screen">
+    <div class="panel result-panel">
+      <h2 id="resultTitle"></h2>
+      <div id="resultText"></div>
+      <div class="row top-gap">
+        <button id="resultToHqBtn" class="primary">Zum Hauptquartier</button>
+        <button id="restartBtn">Mission erneut planen</button>
       </div>
-    </section>
-  </main>
-
-  <script src="characters.js"></script>
-  <script src="equipment.js"></script>
-  <script src="levels.js"></script>
-  <script src="game.js"></script>
-  <script src="script.js"></script>
+    </div>
+  </section>
+</main>
+<script src="characters.js"></script>
+<script src="equipment.js"></script>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

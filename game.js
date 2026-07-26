@@ -1,227 +1,47 @@
-(() => {
-  'use strict';
-
-  const fmt = new Intl.NumberFormat('de-DE', {
-    style:'currency', currency:'EUR', maximumFractionDigits:0
-  });
-
-  const STORAGE_KEY = 'derGrosseCoupSaveV01';
-  const crew = window.GAME_CREW;
-  const tools = window.GAME_TOOLS;
-  const cars = window.GAME_CARS;
-  const missions = window.GAME_MISSIONS;
-
-  let state = defaultState();
-  let executionTimer = null;
-  let aborted = false;
-
-  function defaultState() {
-    return { version:1, money:10000, heat:0, completed:[false,false], currentMission:0 };
-  }
-
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
-      state = { ...defaultState(), ...parsed };
-      return true;
-    } catch (error) {
-      console.warn('Spielstand konnte nicht geladen werden.', error);
-      state = defaultState();
-      return false;
-    }
-  }
-
-  function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo({ top:0, behavior:'instant' });
-  }
-
-  function newGame() {
-    state = defaultState();
-    save();
-    showHQ();
-  }
-
-  function continueGame() {
-    load();
-    showHQ();
-  }
-
-  function showHQ() {
-    clearInterval(executionTimer);
-    showScreen('hq');
-    document.getElementById('money').textContent = fmt.format(state.money);
-    document.getElementById('heat').textContent = state.heat;
-    const list = document.getElementById('missionList');
-    list.innerHTML = '';
-
-    missions.forEach((mission, index) => {
-      const locked = index === 1 && !state.completed[0];
-      const card = document.createElement('article');
-      card.className = `mission-card${locked ? ' locked' : ''}`;
-      card.innerHTML = `
-        <h3>${mission.title}</h3>
-        <p>${mission.desc}</p>
-        <span class="badge">Belohnung: ${fmt.format(mission.reward)}</span>
-        <span class="badge">Mindestteam: ${mission.minCrew}</span>
-        <span class="badge">${state.completed[index] ? 'Abgeschlossen' : 'Offen'}</span><br><br>
-        <button ${locked ? 'disabled' : ''}>${state.completed[index] ? 'Erneut spielen' : 'Mission planen'}</button>`;
-      card.querySelector('button').addEventListener('click', () => openPlanning(index));
-      list.appendChild(card);
-    });
-  }
-
-  function openPlanning(index) {
-    state.currentMission = index;
-    const mission = missions[index];
-    showScreen('planning');
-    document.getElementById('planTitle').textContent = mission.title;
-    document.getElementById('planDesc').textContent = mission.desc;
-    document.getElementById('budget').textContent = fmt.format(state.money);
-
-    const crewList = document.getElementById('crewList');
-    crewList.innerHTML = '';
-    crew.forEach(member => {
-      const card = document.createElement('label');
-      card.className = 'crew-card';
-      card.innerHTML = `<input type="checkbox" value="${member.id}"><strong>${member.name}</strong><br><span>${member.role}</span><br><span class="small">Fähigkeit ${member.skill}/10 · Honorar ${fmt.format(member.cost)}</span>`;
-      const checkbox = card.querySelector('input');
-      checkbox.addEventListener('change', () => card.classList.toggle('selected', checkbox.checked));
-      crewList.appendChild(card);
-    });
-
-    document.getElementById('toolSelect').innerHTML = tools.map(item => `<option value="${item.id}">${item.name} (${fmt.format(item.cost)})</option>`).join('');
-    document.getElementById('carSelect').innerHTML = cars.map(item => `<option value="${item.id}">${item.name} (${fmt.format(item.cost)})</option>`).join('');
-    document.getElementById('timelineBody').innerHTML = mission.phases.map(phase => `<tr><td>${phase[0]}</td><td>${phase[1]}</td><td>${phase[2]}</td></tr>`).join('');
-  }
-
-  function autoPlan() {
-    const targetCount = state.currentMission === 0 ? 2 : 3;
-    document.querySelectorAll('#crewList input').forEach((checkbox, index) => {
-      checkbox.checked = index < targetCount;
-      checkbox.closest('.crew-card').classList.toggle('selected', checkbox.checked);
-    });
-    document.getElementById('toolSelect').value = state.currentMission === 0 ? 'pro' : 'silent';
-    document.getElementById('carSelect').value = state.currentMission === 0 ? 'compact' : 'fast';
-  }
-
-  function selectedCrew() {
-    return [...document.querySelectorAll('#crewList input:checked')]
-      .map(input => crew.find(member => member.id === input.value));
-  }
-
-  function startMission() {
-    const mission = missions[state.currentMission];
-    const team = selectedCrew();
-    const tool = tools.find(item => item.id === document.getElementById('toolSelect').value);
-    const car = cars.find(item => item.id === document.getElementById('carSelect').value);
-    const cost = team.reduce((sum, member) => sum + member.cost, 0) + tool.cost + car.cost;
-
-    if (team.length < mission.minCrew) {
-      alert(`Mindestens ${mission.minCrew} Teammitglieder erforderlich.`);
-      return;
-    }
-    if (cost > state.money) {
-      alert('Das Kapital reicht für diesen Plan nicht aus.');
-      return;
-    }
-
-    state.money -= cost;
-    save();
-    runExecution(mission, team, tool, car, cost);
-  }
-
-  function runExecution(mission, team, tool, car, cost) {
-    showScreen('execution');
-    aborted = false;
-    document.getElementById('abortBtn').disabled = false;
-    document.getElementById('execTitle').textContent = mission.title;
-    document.getElementById('alarm').textContent = '0';
-    document.getElementById('progressBar').style.width = '0%';
-    const log = document.getElementById('log');
-    log.textContent = 'Einsatz beginnt…\n';
-    document.getElementById('map').innerHTML = mission.rooms.map((room, index) => `<div class="room" id="room${index}">${room}</div>`).join('');
-
-    let skillBonus = team.reduce((sum, member) => sum + member.skill, 0) * 1.6;
-    if (team.some(member => member.bonus === 'locks')) skillBonus += 8;
-    if (team.some(member => member.bonus === 'alarm')) skillBonus += state.currentMission === 1 ? 12 : 5;
-    if (team.some(member => member.bonus === 'loot')) skillBonus += 4;
-    if (team.some(member => member.bonus === 'escape')) skillBonus += 8;
-
-    const chance = Math.min(92, mission.baseChance + skillBonus / 4 + tool.bonus + car.bonus - state.heat * 5);
-    let alarm = 0;
-    let step = 0;
-
-    executionTimer = window.setInterval(() => {
-      if (aborted) {
-        clearInterval(executionTimer);
-        finishMission(false, mission, cost, true, alarm, chance);
-        return;
-      }
-
-      document.querySelectorAll('.room').forEach((element, index) => {
-        element.classList.toggle('active', index === Math.min(step, mission.rooms.length - 1));
-        if (index < step) element.classList.add('done');
-      });
-
-      const event = mission.events[Math.min(step, mission.events.length - 1)];
-      log.textContent += `\n${String(step + 1).padStart(2, '0')}: ${event}`;
-      if (Math.random() * 100 > chance + 8) {
-        alarm = Math.min(5, alarm + 1);
-        log.textContent += '\n   WARNUNG: Ein Fehler erhöht den Alarmstatus.';
-      }
-      log.scrollTop = log.scrollHeight;
-      document.getElementById('alarm').textContent = alarm;
-      document.getElementById('progressBar').style.width = `${Math.min(100, (step + 1) / mission.events.length * 100)}%`;
-      step += 1;
-
-      if (step >= mission.events.length) {
-        clearInterval(executionTimer);
-        const success = Math.random() * 100 < Math.max(15, chance - alarm * 10);
-        window.setTimeout(() => finishMission(success, mission, cost, false, alarm, chance), 650);
-      }
-    }, 850);
-  }
-
-  function abortMission() {
-    aborted = true;
-    document.getElementById('abortBtn').disabled = true;
-  }
-
-  function finishMission(success, mission, cost, wasAborted, alarm, chance) {
-    showScreen('result');
-    const title = document.getElementById('resultTitle');
-    const text = document.getElementById('resultText');
-
-    if (success) {
-      state.money += mission.reward;
-      state.heat = Math.min(5, state.heat + Math.max(0, alarm - 1));
-      state.completed[mission.id] = true;
-      title.textContent = 'Coup erfolgreich';
-      title.className = 'result-success';
-      text.innerHTML = `<p>Die Beute wurde gesichert.</p><p><strong>Belohnung:</strong> ${fmt.format(mission.reward)}<br><strong>Einsatzkosten:</strong> ${fmt.format(cost)}<br><strong>Alarmstufe:</strong> ${alarm}/5<br><strong>Erfolgschance des Plans:</strong> ${Math.round(chance)} %</p><p>Aktuelles Kapital: <strong>${fmt.format(state.money)}</strong></p>`;
-    } else {
-      state.heat = Math.min(5, state.heat + (wasAborted ? 0 : 1));
-      title.textContent = wasAborted ? 'Einsatz abgebrochen' : 'Coup gescheitert';
-      title.className = 'result-fail';
-      text.innerHTML = `<p>${wasAborted ? 'Die Bande zieht sich rechtzeitig zurück.' : 'Der Plan bricht unter dem steigenden Druck zusammen.'}</p><p><strong>Einsatzkosten verloren:</strong> ${fmt.format(cost)}<br><strong>Alarmstufe:</strong> ${alarm}/5<br><strong>Geschätzte Erfolgschance:</strong> ${Math.round(chance)} %</p><p>Verbleibendes Kapital: <strong>${fmt.format(state.money)}</strong></p>`;
-    }
-    save();
-  }
-
-  function restartCurrent() {
-    openPlanning(state.currentMission);
-  }
-
-  window.CoupGame = {
-    newGame, continueGame, showScreen, showHQ, autoPlan,
-    startMission, abortMission, restartCurrent, load
-  };
+(()=>{'use strict';
+const fmt=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+const STORAGE_KEY='derGrosseCoupSaveV021';
+const crew=window.GAME_CREW,tools=window.GAME_TOOLS,cars=window.GAME_CARS,missions=window.GAME_MISSIONS;
+let state=defaultState(),currentMission=null,selectedCrewId='emil',executionTimer=null;
+function defaultState(){return{version:21,money:10000,heat:0,completed:[false,false],currentMission:0,plans:{},selectedCrew:['emil','bruno','rudi'],tool:'basic',car:'compact'}}
+function $(id){return document.getElementById(id)}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function load(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)state={...defaultState(),...JSON.parse(raw)}}catch(e){console.warn(e)}$('continueBtn').disabled=!localStorage.getItem(STORAGE_KEY)}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));window.scrollTo(0,0)}
+function newGame(){state=defaultState();save();showHQ()}
+function continueGame(){load();showHQ()}
+function showHQ(){clearInterval(executionTimer);renderHQ();showScreen('hq')}
+function renderHQ(){$('money').textContent=fmt.format(state.money);$('heat').textContent=`${state.heat}/5`;$('missionList').innerHTML=missions.map((m,i)=>{const locked=i>0&&!state.completed[i-1];const done=state.completed[i];return `<article class="mission-card ${locked?'locked':''}"><div class="row"><div class="grow"><div class="eyebrow">MISSION ${i+1}</div><h3>${m.shortTitle}</h3><p>${m.desc}</p><span class="badge">Beute ${fmt.format(m.reward)}</span><span class="badge">Mindestteam ${m.minCrew}</span>${done?'<span class="badge">ABGESCHLOSSEN</span>':''}</div><button ${locked?'disabled':''} data-plan="${i}">${done?'Erneut planen':'Planung öffnen'}</button></div></article>`}).join('');document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>openPlanning(Number(b.dataset.plan)))}
+function getPlan(){const id=String(currentMission.id);if(!state.plans[id])state.plans[id]={routes:{},godMode:false};return state.plans[id]}
+function openPlanning(index){currentMission=missions[index];state.currentMission=index;const plan=getPlan();selectedCrewId=(state.selectedCrew.find(id=>crew.some(c=>c.id===id))||'emil');$('planTitle').textContent=currentMission.title;$('planDesc').textContent=currentMission.desc;$('budget').textContent=fmt.format(state.money);populateEquipment();renderCrew();renderMissionInfo();$('godModeToggle').checked=!!plan.godMode;renderMap();renderTimeline();updateCost();updatePlanStatus('Ungeprüft');$('godReport').textContent='Noch keine Prüfung durchgeführt.';$('godReport').className='god-report';showScreen('planning')}
+function populateEquipment(){$('toolSelect').innerHTML=tools.map(t=>`<option value="${t.id}" ${state.tool===t.id?'selected':''}>${t.name} · ${fmt.format(t.cost)}</option>`).join('');$('carSelect').innerHTML=cars.map(c=>`<option value="${c.id}" ${state.car===c.id?'selected':''}>${c.name} · ${fmt.format(c.cost)}</option>`).join('')}
+function renderCrew(){const plan=getPlan();$('crewList').innerHTML=crew.map(c=>{const selected=state.selectedCrew.includes(c.id);const count=(plan.routes[c.id]||[]).length;return `<div class="crew-card ${selected?'':'unselected'} ${selectedCrewId===c.id?'active':''}" data-crew="${c.id}" style="--member-color:${c.color}"><div class="crew-token">${c.short}</div><div><div class="crew-name">${c.name}</div><div class="crew-role">${c.role} · ${fmt.format(c.cost)} · ${count} Wegpunkte</div></div><input class="crew-check" type="checkbox" ${selected?'checked':''} aria-label="${c.name} auswählen"></div>`}).join('');document.querySelectorAll('.crew-card').forEach(card=>{card.onclick=e=>{const id=card.dataset.crew;if(e.target.matches('input')){toggleCrew(id,e.target.checked);e.stopPropagation();return}if(!state.selectedCrew.includes(id))toggleCrew(id,true);selectedCrewId=id;renderCrew();renderMap();renderTimeline()}})}
+function toggleCrew(id,on){if(on&&!state.selectedCrew.includes(id))state.selectedCrew.push(id);if(!on){state.selectedCrew=state.selectedCrew.filter(x=>x!==id);delete getPlan().routes[id];if(selectedCrewId===id)selectedCrewId=state.selectedCrew[0]||crew[0].id}save();renderCrew();renderMap();renderTimeline();updateCost()}
+function renderMissionInfo(){$('missionInfo').innerHTML=`<div class="info-list">${Object.entries(currentMission.intel).map(([k,v])=>`<span>${k}</span><strong>${v}</strong>`).join('')}</div><p class="small">Ziele: ${currentMission.objectiveNodes.map(id=>nodeById(id).label).join(', ')}</p>`}
+function nodeById(id){return currentMission.nodes.find(n=>n.id===id)}
+function connected(a,b){return currentMission.edges.some(e=>(e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a))}
+function renderBaseMap(svg,interactive=true,positions=null){svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const add=(tag,attrs,parent=svg)=>{const el=document.createElementNS(ns,tag);Object.entries(attrs||{}).forEach(([k,v])=>el.setAttribute(k,v));parent.appendChild(el);return el};currentMission.rooms.forEach(r=>{add('rect',{x:r.x,y:r.y,width:r.w,height:r.h,class:r.outside?'outside-shape':'room-shape'});const t=add('text',{x:r.x+r.w/2,y:r.y+r.h/2,class:'room-label'});t.textContent=r.label});const showConn=$('showConnections')?.checked!==false||!getPlan().godMode;currentMission.edges.forEach(([a,b])=>{const na=nodeById(a),nb=nodeById(b);add('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,class:`map-edge ${showConn?'':'god-hidden'}`})});const showHaz=$('showHazards')?.checked!==false&&getPlan().godMode;currentMission.hazards.forEach(h=>add('rect',{x:h.x,y:h.y,width:h.w,height:h.h,class:`hazard-zone ${showHaz?'':'hidden'}`}));renderRoutes(svg,add);currentMission.nodes.forEach(n=>{const g=add('g',{class:`map-node ${n.type||'normal'} ${((getPlan().routes[selectedCrewId]||[]).includes(n.id))?'selected':''}`});const hit=add('circle',{cx:n.x,cy:n.y,r:22},g);const txt=add('text',{x:n.x,y:n.y},g);txt.textContent=n.objective?'★':n.type==='exit'?'F':n.type==='hazard'?'!':'•';const lab=add('text',{x:n.x,y:n.y+42,class:'node-label'},g);lab.textContent=n.label;if(interactive){g.addEventListener('click',()=>addWaypoint(n.id));g.addEventListener('touchend',ev=>{ev.preventDefault();addWaypoint(n.id)},{passive:false})}});if(positions){Object.entries(positions).forEach(([id,pos])=>{const c=crew.find(x=>x.id===id);if(!c)return;add('circle',{cx:pos.x,cy:pos.y,r:17,fill:c.color,stroke:'#080a08','stroke-width':5});const tx=add('text',{x:pos.x,y:pos.y+6,fill:'#fff','font-size':16,'font-weight':'bold','text-anchor':'middle'});tx.textContent=c.short})}}
+function renderRoutes(svg,add){const plan=getPlan();crew.forEach(c=>{const route=plan.routes[c.id]||[];if(route.length<1)return;const pts=route.map(id=>nodeById(id)).filter(Boolean);if(pts.length>1)add('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),class:'route-line',stroke:c.color});pts.forEach((p,i)=>{add('circle',{cx:p.x,cy:p.y,r:13,fill:c.color,class:'route-marker'});const t=add('text',{x:p.x,y:p.y,class:'route-number'});t.textContent=i+1})})}
+function renderMap(){renderBaseMap($('missionMap'),true);const c=crew.find(x=>x.id===selectedCrewId);const route=getPlan().routes[selectedCrewId]||[];$('mapHint').textContent=c?`${c.name}: ${route.length?`Nächsten verbundenen Punkt wählen. Aktuell: ${nodeById(route.at(-1)).label}`:'Startpunkt auf der Karte wählen.'}`:'Wähle ein Teammitglied.'}
+function addWaypoint(nodeId){if(!state.selectedCrew.includes(selectedCrewId))return;const plan=getPlan();const route=plan.routes[selectedCrewId]||(plan.routes[selectedCrewId]=[]);if(route.length&&route.at(-1)===nodeId)return;if(route.length&&!connected(route.at(-1),nodeId)){$('mapHint').textContent='Dieser Punkt ist nicht direkt mit dem letzten Wegpunkt verbunden.';return}route.push(nodeId);save();renderMap();renderTimeline();updatePlanStatus('Geändert')}
+function undoWaypoint(){const r=getPlan().routes[selectedCrewId]||[];r.pop();save();renderMap();renderTimeline();updatePlanStatus('Geändert')}
+function clearRoute(){getPlan().routes[selectedCrewId]=[];save();renderMap();renderTimeline();updatePlanStatus('Geändert')}
+function clearAllRoutes(){getPlan().routes={};save();renderMap();renderTimeline();updatePlanStatus('Geändert')}
+function actionDuration(c,node,prev){let d=node.duration||15;if(node.requires===c.bonus)d=Math.max(12,Math.round(d*.62));if(prev){const dx=node.x-prev.x,dy=node.y-prev.y;d+=Math.max(5,Math.round(Math.hypot(dx,dy)/14))}return d}
+function routeActions(c,route){let time=0;return route.map((id,i)=>{const n=nodeById(id),prev=i?nodeById(route[i-1]):null;const dur=i===0?0:actionDuration(c,n,prev);const start=time;time+=dur;return{node:n,start,duration:dur,end:time,action:i===0?'Position beziehen':(n.action||`Zu ${n.label} bewegen`)}})}
+function formatTime(s){const m=Math.floor(s/60),sec=s%60;return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`}
+function renderTimeline(){const plan=getPlan();let max=0;const html=state.selectedCrew.map(id=>{const c=crew.find(x=>x.id===id),actions=routeActions(c,plan.routes[id]||[]);max=Math.max(max,actions.at(-1)?.end||0);return `<div class="timeline-row"><div class="timeline-person"><span class="crew-token" style="--member-color:${c.color};border-color:${c.color};color:${c.color}">${c.short}</span><div>${c.name.split(' „')[0]}<div class="crew-role">${c.role}</div></div></div><div class="timeline-track">${actions.length?actions.map(a=>`<div class="time-block" style="background:${c.color}33;flex:${Math.max(1,a.duration)}"><strong>${formatTime(a.start)}</strong>${a.action}<small>${a.duration}s</small></div>`).join(''):'<div class="empty-plan">Noch keine Route geplant.</div>'}</div></div>`}).join('');$('timelineGrid').innerHTML=html||'<div class="empty-plan">Kein Team ausgewählt.</div>';$('planDuration').textContent=formatTime(max)}
+function updateCost(){const crewCost=state.selectedCrew.reduce((s,id)=>s+(crew.find(c=>c.id===id)?.cost||0),0),tool=tools.find(t=>t.id===$('toolSelect').value)||tools[0],car=cars.find(c=>c.id===$('carSelect').value)||cars[0];state.tool=tool.id;state.car=car.id;const total=crewCost+tool.cost+car.cost;$('costSummary').innerHTML=`Team: ${fmt.format(crewCost)}<br>Werkzeug: ${fmt.format(tool.cost)}<br>Fahrzeug: ${fmt.format(car.cost)}<br><strong>Gesamt: ${fmt.format(total)}</strong>`;$('startMissionBtn').disabled=total>state.money;save()}
+function autoPlan(){const plan=getPlan();plan.routes={};Object.entries(currentMission.recommended).forEach(([id,route])=>{if(state.selectedCrew.includes(id))plan.routes[id]=[...route]});save();renderMap();renderTimeline();updatePlanStatus('Musterplan geladen')}
+function updatePlanStatus(txt){$('planStatus').textContent=txt}
+function analyzePlan(){const plan=getPlan(),issues=[],warnings=[];if(state.selectedCrew.length<currentMission.minCrew)issues.push(`Mindestens ${currentMission.minCrew} Teammitglieder erforderlich.`);for(const bonus of currentMission.requiredBonuses){if(!state.selectedCrew.some(id=>crew.find(c=>c.id===id)?.bonus===bonus))issues.push(`Spezialist fehlt: ${bonus==='locks'?'Schlossknacker':'Elektroniker'}.`)}const visited=new Set();let maxTime=0;state.selectedCrew.forEach(id=>{const c=crew.find(x=>x.id===id),r=plan.routes[id]||[];if(!r.length){warnings.push(`${c.name}: keine Route.`);return}r.forEach(n=>visited.add(n));const acts=routeActions(c,r);maxTime=Math.max(maxTime,acts.at(-1)?.end||0);if(r[0]!==currentMission.entryNode)warnings.push(`${c.name}: startet nicht am Fluchtwagen.`);if(r.at(-1)!==currentMission.exitNode)issues.push(`${c.name}: endet nicht am Fluchtwagen.`);acts.forEach(a=>{if(a.node.requires&&a.node.requires!==c.bonus)warnings.push(`${c.name} führt „${a.action}“ ohne passende Spezialisierung aus.`)})});currentMission.objectiveNodes.forEach(id=>{if(!visited.has(id))issues.push(`Ziel nicht eingeplant: ${nodeById(id).label}.`)});const alarmNodeVisited=visited.has('alarm');if(currentMission.id===1&&!alarmNodeVisited)warnings.push('Alarmzentrale wird nicht deaktiviert: hohes Entdeckungsrisiko.');if(maxTime>430&&currentMission.id===0)warnings.push('Plan dauert länger als das sichere Zeitfenster der Polizeistreife.');let success=currentMission.baseChance;success+=state.selectedCrew.length*3;success+=tools.find(t=>t.id===state.tool).bonus+cars.find(c=>c.id===state.car).bonus;success-=issues.length*28;success-=warnings.length*9;if(alarmNodeVisited)success+=12;success=Math.max(5,Math.min(98,success));return{issues,warnings,success,maxTime,valid:issues.length===0}}
+function simulatePlan(){const plan=getPlan();plan.godMode=$('godModeToggle').checked;save();renderMap();const r=analyzePlan();let text=`ERFOLGSCHANCE: ${r.success}%\nGESAMTDAUER: ${formatTime(r.maxTime)}\n\n`;if(!r.issues.length&&!r.warnings.length)text+='Keine Planungsfehler erkannt.';if(r.issues.length)text+='KRITISCHE FEHLER:\n- '+r.issues.join('\n- ')+'\n\n';if(r.warnings.length)text+='WARNUNGEN:\n- '+r.warnings.join('\n- ');$('godReport').textContent=text;$('godReport').className=`god-report ${r.valid?'ok':'fail'}`;updatePlanStatus(r.valid?'Prüfung bestanden':'Fehler im Plan');return r}
+function savePlan(){save();updatePlanStatus('Gespeichert');$('mapHint').textContent='Plan wurde lokal auf diesem Gerät gespeichert.'}
+function startMission(){const result=simulatePlan();if(!result.valid){$('mapHint').textContent='Der Plan enthält kritische Fehler. God-Bericht beachten.';return}runExecution(result)}
+function runExecution(analysis){showScreen('execution');$('execTitle').textContent=currentMission.title;$('alarm').textContent='0/5';$('progressBar').style.width='0%';$('log').textContent='PLAN GELADEN. EINSATZ BEGINNT.\n';const all=[];state.selectedCrew.forEach(id=>{const c=crew.find(x=>x.id===id);routeActions(c,getPlan().routes[id]||[]).slice(1).forEach(a=>all.push({...a,crew:c}))});all.sort((a,b)=>a.end-b.end);let i=0;const total=Math.max(1,all.length);renderBaseMap($('executionMap'),false);executionTimer=setInterval(()=>{if(i>=all.length){clearInterval(executionTimer);finishMission(analysis);return}const a=all[i++];$('execClock').textContent=formatTime(a.end);$('log').textContent+=`${formatTime(a.end)}  ${a.crew.name}: ${a.action}.\n`;$('log').scrollTop=$('log').scrollHeight;$('progressBar').style.width=`${i/total*100}%`;const positions={};state.selectedCrew.forEach(id=>{const acts=routeActions(crew.find(c=>c.id===id),getPlan().routes[id]||[]);const last=acts.filter(x=>x.end<=a.end).at(-1)||acts[0];if(last)positions[id]={x:last.node.x,y:last.node.y}});renderBaseMap($('executionMap'),false,positions)},380)}
+function finishMission(analysis){const roll=Math.random()*100,success=roll<=analysis.success;if(success){state.money+=currentMission.reward;state.completed[currentMission.id]=true;state.heat=Math.min(5,state.heat+(currentMission.id?1:0));save();$('resultTitle').innerHTML='<span class="result-success">COUP GELUNGEN</span>';$('resultText').innerHTML=`<p>Der Plan wurde erfolgreich ausgeführt.</p><p>Beute: <strong>${fmt.format(currentMission.reward)}</strong></p><p>Berechnete Erfolgschance: ${analysis.success}%</p>`}else{state.heat=Math.min(5,state.heat+1);save();$('resultTitle').innerHTML='<span class="result-fail">COUP GESCHEITERT</span>';$('resultText').innerHTML=`<p>Der Ablauf geriet trotz grundsätzlich ausführbarem Plan außer Kontrolle.</p><p>Berechnete Erfolgschance: ${analysis.success}%</p><p>Der Plan kann angepasst und erneut geprüft werden.</p>`}showScreen('result')}
+function abortMission(){clearInterval(executionTimer);$('resultTitle').innerHTML='<span class="result-fail">EINSATZ ABGEBROCHEN</span>';$('resultText').innerHTML='<p>Die Bande hat sich ohne Beute zurückgezogen.</p>';showScreen('result')}
+function restartCurrent(){openPlanning(state.currentMission)}
+function setGodMode(){getPlan().godMode=$('godModeToggle').checked;save();renderMap()}
+window.CoupGame={load,newGame,continueGame,showScreen,showHQ,autoPlan,startMission,abortMission,restartCurrent,undoWaypoint,clearRoute,clearAllRoutes,simulatePlan,savePlan,setGodMode,renderMap,updateCost};
 })();

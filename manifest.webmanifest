@@ -1,16 +1,1 @@
-{
-  "name": "Der große Coup",
-  "short_name": "Großer Coup",
-  "description": "Strategisches Retrospiel mit zwei Missionen.",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "any",
-  "background_color": "#111111",
-  "theme_color": "#111111",
-  "lang": "de-DE",
-  "icons": [
-    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
-}
+{"name":"Der große Coup","short_name":"Großer Coup","description":"Retro-Taktiksimulation mit interaktiver Missionsplanung.","start_url":"./index.html","scope":"./","display":"standalone","orientation":"landscape","background_color":"#090b09","theme_color":"#090b09","lang":"de-DE","icons":[{"src":"assets/icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"assets/icons/icon-512.png","sizes":"512x512","type":"image/png"}]}
