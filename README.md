@@ -2,7 +2,7 @@
 
 Installierbare Retro-Taktiksimulation als Progressive Web App für iPad und Mac.
 
-## Aktueller Stand: Version 0.2.1
+## Aktueller Stand: Version 0.2.2
 
 - zwei grafische Gebäudegrundrisse
 - interaktive Wegpunktplanung per Touch oder Maus
@@ -23,4 +23,4 @@ Installierbare Retro-Taktiksimulation als Progressive Web App für iPad und Mac.
 5. **Plan prüfen** verwenden.
 6. Kritische Fehler beseitigen und den Einsatz starten.
 
-Die ausführliche Update-Anleitung befindet sich unter [`docs/UPDATE-0.2.1.md`](docs/UPDATE-0.2.1.md).
+Die ausführliche Update-Anleitung befindet sich unter [`docs/UPDATE-0.2.2.md`](docs/UPDATE-0.2.2.md).
