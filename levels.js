@@ -1,15 +1,15 @@
 window.GAME_MISSION = {
-  id: 'tobacco-core',
+  id: 'tobacco-alpha2',
   title: 'Der Tabakladen',
   startNode: 'car',
   objectiveNode: 'cash',
   nodes: [
     { id: 'car', x: 85, y: 548, label: 'Fluchtwagen', kind: 'start' },
-    { id: 'front', x: 285, y: 480, label: 'Haupteingang', kind: 'node' },
+    { id: 'front', x: 285, y: 480, label: 'Haupteingang', kind: 'door', doorDuration: 4 },
     { id: 'shop', x: 380, y: 350, label: 'Verkaufsraum', kind: 'node' },
     { id: 'cash', x: 220, y: 330, label: 'Kasse', kind: 'objective' },
     { id: 'office', x: 620, y: 350, label: 'Büro', kind: 'node' },
-    { id: 'rear', x: 735, y: 235, label: 'Hintertür', kind: 'node' },
+    { id: 'rear', x: 735, y: 235, label: 'Hintertür', kind: 'door', doorDuration: 5 },
     { id: 'yard', x: 495, y: 145, label: 'Hinterhof', kind: 'node' }
   ],
   edges: [

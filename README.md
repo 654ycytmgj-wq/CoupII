@@ -1,32 +1,16 @@
 # Der große Coup
 
-## Version 0.3.0-alpha.1
+Aktueller Entwicklungsstand: **0.3.0-alpha.2**.
 
-Architektonischer Neustart auf Basis von Version 0.2.1.
+Dieser Stand konzentriert sich auf eine strukturierte Planung auf der Karte und einen deterministischen Simulationskern. Neu sind bearbeitbare Aktionslisten, frei wählbare Wartezeiten, echte Türzustände, eine erste Engstellenprüfung und eine klarere Anzeige der laufenden Aktion.
 
-Dieser Stand enthält bewusst nur den Tabakladen, zwei Figuren und einen deterministischen Simulationskern. Die Planung erfolgt weiterhin direkt auf der Karte, wird intern jedoch als strukturierte Aktionsliste gespeichert.
+## Test
 
-### Enthalten
+```bash
+node --check game.js
+node --check script.js
+node tests/engine-alpha2-check.js
+python tests/browser-smoke.py
+```
 
-- Person auswählen und Kartenpunkte antippen
-- automatische Wegberechnung
-- strukturierte Aktionslisten
-- Warten für 5 oder 10 Sekunden
-- Referenzplan
-- Planprüfung
-- Start, Pause, Fortsetzen, Einzelschritt und nächstes Ereignis
-- segmentierte Marker bei gleicher Position
-- laufendes Einsatzprotokoll
-- bestätigungspflichtiges Zielereignis
-- deterministischer Missionsabschluss ohne Zufall
-
-### Bewusst nicht enthalten
-
-- Alarmanlage
-- Türen und Engstellenkonflikte
-- Safe
-- Wachpersonal
-- zweites Level
-- God-Modus und Teamempfehlung
-
-Siehe `docs/UPDATE-0.3.0-alpha.1.md`.
+Die GitHub-Anleitung steht unter `docs/UPDATE-0.3.0-alpha.2.md`.

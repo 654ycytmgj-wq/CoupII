@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Der große Coup">
-  <title>Der große Coup 0.3.0-alpha.1</title>
+  <title>Der große Coup 0.3.0-alpha.2</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="style.css?v=030a1">
+  <link rel="stylesheet" href="style.css?v=030a2">
 </head>
 <body>
 <main id="app">
@@ -17,7 +17,7 @@
     <div>
       <div class="eyebrow">NEUER SIMULATIONSKERN</div>
       <h1>Der große Coup</h1>
-      <p>Version 0.3.0-alpha.1 · Karte und strukturierte Aktionslisten</p>
+      <p>Version 0.3.0-alpha.2 · Aktionsbearbeitung, Türen und Engstellenprüfung</p>
     </div>
     <div class="status-grid">
       <div class="stat">Modus <strong id="modeLabel">PLANUNG</strong></div>
@@ -37,6 +37,10 @@
         <button type="button" data-wait="5">Warten 5 s</button>
         <button type="button" data-wait="10">Warten 10 s</button>
       </div>
+      <label class="custom-wait">Freie Wartezeit
+        <span><input id="customWaitInput" type="number" min="1" max="300" value="15" inputmode="numeric"> Sekunden</span>
+      </label>
+      <button id="addCustomWaitBtn" type="button">Wartezeit hinzufügen</button>
       <button id="removeLastBtn" type="button">Letzte Aktion löschen</button>
       <button id="clearPlanBtn" type="button">Plan dieser Person leeren</button>
 
@@ -58,6 +62,7 @@
         <span><i class="dot start"></i>Fluchtwagen</span>
         <span><i class="dot node"></i>Wegpunkt</span>
         <span><i class="dot objective"></i>Kasse</span>
+        <span><i class="dot door"></i>Tür</span>
       </div>
     </section>
 
@@ -107,16 +112,15 @@
     <p id="eventText"></p>
     <div class="dialog-actions">
       <button id="eventContinueBtn" class="primary" type="button">OK und fortsetzen</button>
-      <button id="eventPauseBtn" type="button">OK – pausiert bleiben</button>
       <button id="eventPlanningBtn" type="button">Zur Planung</button>
       <button id="eventAbortBtn" class="danger" type="button">Abbrechen</button>
     </div>
   </div>
 </div>
 
-<script src="characters.js?v=030a1"></script>
-<script src="levels.js?v=030a1"></script>
-<script src="game.js?v=030a1"></script>
-<script src="script.js?v=030a1"></script>
+<script src="characters.js?v=030a2"></script>
+<script src="levels.js?v=030a2"></script>
+<script src="game.js?v=030a2"></script>
+<script src="script.js?v=030a2"></script>
 </body>
 </html>
