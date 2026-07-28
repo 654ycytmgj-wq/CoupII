@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Der große Coup">
-  <title>Der große Coup 0.2.2-RC2-core</title>
+  <title>Der große Coup 0.2.2-RC2-core.1</title>
   <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
@@ -18,7 +18,7 @@
     <div class="panel title-panel">
       <div class="eyebrow">RETRO-TAKTIKSIMULATION</div>
       <h1>DER GROSSE COUP</h1>
-      <div class="subtitle">Version 0.2.2-RC2-core · Stabiler Simulationskern</div>
+      <div class="subtitle">Version 0.2.2-RC2-core.1 · Stabiler Simulationskern</div>
       <p>Plane die Wege Deiner Spezialisten direkt auf dem Gebäudegrundriss. Der Einsatz folgt anschließend genau Deinem Plan.</p>
       <div class="row">
         <button id="newGameBtn" class="primary">Neues Spiel</button>
@@ -37,7 +37,7 @@
       <div class="row">
         <div class="stat">Kapital <strong id="money">10.000 €</strong></div>
         <div class="stat">Fahndung <strong id="heat">0/5</strong></div>
-        <div class="version-tag">v0.2.2-RC2-core</div>
+        <div class="version-tag">v0.2.2-RC2-core.1</div>
       </div>
     </header>
     <div id="missionList"></div>
@@ -143,7 +143,7 @@
         <button id="execPauseBtn">Pause</button>
         <button id="execContinueBtn">Fortsetzen</button>
         <button id="execStepBtn">+1 Sekunde</button>
-        <button id="execNextEventBtn">Nächstes Ereignis</button>
+        <button id="execNextEventBtn">Nächstes Ereignis</button><label class="speed-control">Tempo <select id="speedSelect"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option></select></label>
         <button id="backToPlanningBtn">Zur Planung</button>
         <button id="abortBtn" class="danger">Einsatz abbrechen</button>
       </div>
@@ -157,11 +157,11 @@
       <h2 id="eventTitle">Ereignis</h2>
       <p id="eventMessage"></p>
       <div class="row controls-wrap">
-        <button id="eventOkBtn" class="primary">OK</button>
+        <button id="eventContinueBtn" class="primary">OK und fortsetzen</button><button id="eventPauseBtn">OK – pausiert bleiben</button>
         <button id="eventPlanningBtn">Zur Planung</button>
         <button id="eventAbortBtn" class="danger">Abbrechen</button>
       </div>
-      <p class="small">Nach „OK“ bleibt die Simulation pausiert. Danach kann sie fortgesetzt oder schrittweise geprüft werden.</p>
+      <p class="small">„OK und fortsetzen“ setzt den Ablauf automatisch fort. Die zweite Option hält für die schrittweise Prüfung an.</p>
     </div>
   </div>
 

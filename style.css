@@ -12,3 +12,5 @@
 .event-dialog-card h2{margin-top:6px}
 #execStatus{letter-spacing:.08em}
 @media(max-width:720px){.event-dialog{padding:12px}.execution-controls button{flex:1 1 46%}}
+
+.actor-marker{stroke:#080a08;stroke-width:4}.actor-label,.actor-count{fill:#fff;font-size:16px;font-weight:bold;text-anchor:middle;pointer-events:none}.speed-control{display:flex;align-items:center;gap:7px;margin:0}.speed-control select{width:auto;min-width:72px;padding:8px}.log{font-size:13px}

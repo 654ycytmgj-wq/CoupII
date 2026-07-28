@@ -1,6 +1,6 @@
 # Der große Coup
 
-## Version 0.2.2-RC2-core
+## Version 0.2.2-RC2-core.1
 
 Dieser Release-Kandidat basiert auf **0.2.1** und ersetzt ausschließlich den bisherigen Simulationsablauf durch einen deterministischen Kern.
 
@@ -17,4 +17,11 @@ Enthalten:
 
 Bewusst noch nicht enthalten sind die für spätere Pakete vorgesehenen erweiterten Warte-, Tür-, Engstellen-, Alarm- und God-Modus-Funktionen.
 
-Die GitHub-Aktualisierung steht in `docs/UPDATE-0.2.2-RC2-core.md`.
+Die GitHub-Aktualisierung steht in `docs/UPDATE-0.2.2-RC2-core.1.md`.
+
+
+### Korrekturen in core.1
+- Standardtempo 4×, umschaltbar auf 1×/2×/4×/8×
+- laufendes Ereignisprotokoll
+- segmentierte Mehrpersonenmarker
+- Ereignisdialog mit Fortsetzen oder pausiertem Prüfen

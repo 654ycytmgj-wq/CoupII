@@ -22,7 +22,8 @@ function toggleCrew(id,on){if(on&&!state.selectedCrew.includes(id))state.selecte
 function renderMissionInfo(){$('missionInfo').innerHTML=`<div class="info-list">${Object.entries(currentMission.intel).map(([k,v])=>`<span>${k}</span><strong>${v}</strong>`).join('')}</div><p class="small">Ziele: ${currentMission.objectiveNodes.map(id=>nodeById(id).label).join(', ')}</p>`}
 function nodeById(id){return currentMission.nodes.find(n=>n.id===id)}
 function connected(a,b){return currentMission.edges.some(e=>(e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a))}
-function renderBaseMap(svg,interactive=true,positions=null){svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const add=(tag,attrs,parent=svg)=>{const el=document.createElementNS(ns,tag);Object.entries(attrs||{}).forEach(([k,v])=>el.setAttribute(k,v));parent.appendChild(el);return el};currentMission.rooms.forEach(r=>{add('rect',{x:r.x,y:r.y,width:r.w,height:r.h,class:r.outside?'outside-shape':'room-shape'});const t=add('text',{x:r.x+r.w/2,y:r.y+r.h/2,class:'room-label'});t.textContent=r.label});const showConn=$('showConnections')?.checked!==false||!getPlan().godMode;currentMission.edges.forEach(([a,b])=>{const na=nodeById(a),nb=nodeById(b);add('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,class:`map-edge ${showConn?'':'god-hidden'}`})});const showHaz=$('showHazards')?.checked!==false&&getPlan().godMode;currentMission.hazards.forEach(h=>add('rect',{x:h.x,y:h.y,width:h.w,height:h.h,class:`hazard-zone ${showHaz?'':'hidden'}`}));renderRoutes(svg,add);currentMission.nodes.forEach(n=>{const g=add('g',{class:`map-node ${n.type||'normal'} ${((getPlan().routes[selectedCrewId]||[]).includes(n.id))?'selected':''}`});const hit=add('circle',{cx:n.x,cy:n.y,r:22},g);const txt=add('text',{x:n.x,y:n.y},g);txt.textContent=n.objective?'★':n.type==='exit'?'F':n.type==='hazard'?'!':'•';const lab=add('text',{x:n.x,y:n.y+42,class:'node-label'},g);lab.textContent=n.label;if(interactive){g.addEventListener('click',()=>addWaypoint(n.id));g.addEventListener('touchend',ev=>{ev.preventDefault();addWaypoint(n.id)},{passive:false})}});if(positions){Object.entries(positions).forEach(([id,pos])=>{const c=crew.find(x=>x.id===id);if(!c)return;add('circle',{cx:pos.x,cy:pos.y,r:17,fill:c.color,stroke:'#080a08','stroke-width':5});const tx=add('text',{x:pos.x,y:pos.y+6,fill:'#fff','font-size':16,'font-weight':'bold','text-anchor':'middle'});tx.textContent=c.short})}}
+function renderBaseMap(svg,interactive=true,positions=null){svg.innerHTML='';const ns='http://www.w3.org/2000/svg';const add=(tag,attrs,parent=svg)=>{const el=document.createElementNS(ns,tag);Object.entries(attrs||{}).forEach(([k,v])=>el.setAttribute(k,v));parent.appendChild(el);return el};currentMission.rooms.forEach(r=>{add('rect',{x:r.x,y:r.y,width:r.w,height:r.h,class:r.outside?'outside-shape':'room-shape'});const t=add('text',{x:r.x+r.w/2,y:r.y+r.h/2,class:'room-label'});t.textContent=r.label});const showConn=$('showConnections')?.checked!==false||!getPlan().godMode;currentMission.edges.forEach(([a,b])=>{const na=nodeById(a),nb=nodeById(b);add('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,class:`map-edge ${showConn?'':'god-hidden'}`})});const showHaz=$('showHazards')?.checked!==false&&getPlan().godMode;currentMission.hazards.forEach(h=>add('rect',{x:h.x,y:h.y,width:h.w,height:h.h,class:`hazard-zone ${showHaz?'':'hidden'}`}));renderRoutes(svg,add);currentMission.nodes.forEach(n=>{const g=add('g',{class:`map-node ${n.type||'normal'} ${((getPlan().routes[selectedCrewId]||[]).includes(n.id))?'selected':''}`});add('circle',{cx:n.x,cy:n.y,r:22},g);const txt=add('text',{x:n.x,y:n.y},g);txt.textContent=n.objective?'★':n.type==='exit'?'F':n.type==='hazard'?'!':'•';const lab=add('text',{x:n.x,y:n.y+42,class:'node-label'},g);lab.textContent=n.label;if(interactive){g.addEventListener('click',()=>addWaypoint(n.id));g.addEventListener('touchend',ev=>{ev.preventDefault();addWaypoint(n.id)},{passive:false})}});if(positions)renderActorMarkers(add,positions)}
+function renderActorMarkers(add,positions){const groups=[];Object.entries(positions).forEach(([id,pos])=>{const found=groups.find(g=>Math.hypot(g.x-pos.x,g.y-pos.y)<3);if(found)found.ids.push(id);else groups.push({x:pos.x,y:pos.y,ids:[id]})});groups.forEach(g=>{const members=g.ids.map(id=>crew.find(c=>c.id===id)).filter(Boolean);const r=19;if(members.length===1){add('circle',{cx:g.x,cy:g.y,r,fill:members[0].color,class:'actor-marker'});const tx=add('text',{x:g.x,y:g.y+6,class:'actor-label'});tx.textContent=members[0].short;return}members.forEach((m,i)=>{const a0=-Math.PI/2+i*2*Math.PI/members.length,a1=-Math.PI/2+(i+1)*2*Math.PI/members.length;const x0=g.x+r*Math.cos(a0),y0=g.y+r*Math.sin(a0),x1=g.x+r*Math.cos(a1),y1=g.y+r*Math.sin(a1);const large=(a1-a0)>Math.PI?1:0;add('path',{d:`M ${g.x} ${g.y} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`,fill:m.color,class:'actor-marker'})});add('circle',{cx:g.x,cy:g.y,r:8,fill:'#080a08',stroke:'#fff','stroke-width':1});const tx=add('text',{x:g.x,y:g.y+5,class:'actor-count'});tx.textContent=members.length})}
 function renderRoutes(svg,add){const plan=getPlan();crew.forEach(c=>{const route=plan.routes[c.id]||[];if(route.length<1)return;const pts=route.map(id=>nodeById(id)).filter(Boolean);if(pts.length>1)add('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),class:'route-line',stroke:c.color});pts.forEach((p,i)=>{add('circle',{cx:p.x,cy:p.y,r:13,fill:c.color,class:'route-marker'});const t=add('text',{x:p.x,y:p.y,class:'route-number'});t.textContent=i+1})})}
 function renderMap(){renderBaseMap($('missionMap'),true);const c=crew.find(x=>x.id===selectedCrewId);const route=getPlan().routes[selectedCrewId]||[];$('mapHint').textContent=c?`${c.name}: ${route.length?`Nächsten verbundenen Punkt wählen. Aktuell: ${nodeById(route.at(-1)).label}`:'Startpunkt auf der Karte wählen.'}`:'Wähle ein Teammitglied.'}
 function addWaypoint(nodeId){if(!state.selectedCrew.includes(selectedCrewId))return;const plan=getPlan();const route=plan.routes[selectedCrewId]||(plan.routes[selectedCrewId]=[]);if(route.length&&route.at(-1)===nodeId)return;if(route.length&&!connected(route.at(-1),nodeId)){$('mapHint').textContent='Dieser Punkt ist nicht direkt mit dem letzten Wegpunkt verbunden.';return}route.push(nodeId);save();renderMap();renderTimeline();updatePlanStatus('Geändert')}
@@ -47,132 +48,51 @@ function startMission(){
 function buildExecutionActors(){
   const actors={};
   state.selectedCrew.forEach(id=>{
-    const member=crew.find(c=>c.id===id);
-    const route=getPlan().routes[id]||[];
-    actors[id]={member,route,actions:routeActions(member,route),position:route.length?{...nodeById(route[0])}:null,completed:false};
+    const member=crew.find(c=>c.id===id),route=getPlan().routes[id]||[],actions=routeActions(member,route);
+    actors[id]={member,route,actions,position:route.length?{...nodeById(route[0])}:null,completed:false,lastActionIndex:-1};
   });
   return actors;
 }
 function prepareExecution(analysis){
   clearInterval(executionTimer);executionTimer=null;
-  execution={status:EXEC_STATE.READY,time:0,analysis,actors:buildExecutionActors(),handledEvents:new Set(),eventQueue:[],lastLogSecond:-1};
-  showScreen('execution');
-  $('execTitle').textContent=currentMission.title;
-  $('alarm').textContent='0/5';$('progressBar').style.width='0%';$('execClock').textContent='00:00';
-  $('log').textContent='PLAN GELADEN. BEREIT ZUM START.\n';
-  setExecutionStatus(EXEC_STATE.READY);
-  renderExecutionFrame();
+  execution={status:EXEC_STATE.READY,time:0,analysis,actors:buildExecutionActors(),handledEvents:new Set(),eventQueue:[],currentEvent:null,speed:Number($('speedSelect')?.value||4)};
+  showScreen('execution');$('execTitle').textContent=currentMission.title;$('alarm').textContent='0/5';$('progressBar').style.width='0%';$('execClock').textContent='00:00';
+  $('log').textContent='00:00  PLAN GELADEN. BEREIT ZUM START.\n';setExecutionStatus(EXEC_STATE.READY);renderExecutionFrame();
 }
 function setExecutionStatus(status){
-  if(!execution)return;execution.status=status;
-  const running=status===EXEC_STATE.RUNNING,paused=status===EXEC_STATE.PAUSED,ready=status===EXEC_STATE.READY,eventStop=status===EXEC_STATE.EVENT_STOP;
-  $('execStatus').textContent=status;
-  $('execStartBtn').disabled=!ready;
-  $('execPauseBtn').disabled=!running;
-  $('execContinueBtn').disabled=!paused;
-  $('execStepBtn').disabled=!paused;
-  $('execNextEventBtn').disabled=!paused;
-  $('backToPlanningBtn').disabled=running;
+  if(!execution)return;execution.status=status;const running=status===EXEC_STATE.RUNNING,paused=status===EXEC_STATE.PAUSED,ready=status===EXEC_STATE.READY;
+  $('execStatus').textContent=status;$('execStartBtn').disabled=!ready;$('execPauseBtn').disabled=!running;$('execContinueBtn').disabled=!paused;$('execStepBtn').disabled=!paused;$('execNextEventBtn').disabled=!paused;$('backToPlanningBtn').disabled=running||status===EXEC_STATE.EVENT_STOP;$('speedSelect').disabled=running;
 }
-function beginExecution(){
-  if(!execution||execution.status!==EXEC_STATE.READY)return;
-  appendLog('EINSATZ GESTARTET.');
-  setExecutionStatus(EXEC_STATE.RUNNING);startExecutionTimer();
-}
-function startExecutionTimer(){
-  clearInterval(executionTimer);
-  executionTimer=setInterval(()=>{if(execution?.status===EXEC_STATE.RUNNING)simulateOneSecond()},500);
-}
-function pauseExecution(){
-  if(!execution||execution.status!==EXEC_STATE.RUNNING)return;
-  clearInterval(executionTimer);executionTimer=null;setExecutionStatus(EXEC_STATE.PAUSED);appendLog('SIMULATION PAUSIERT.');
-}
-function continueExecution(){
-  if(!execution||execution.status!==EXEC_STATE.PAUSED)return;
-  setExecutionStatus(EXEC_STATE.RUNNING);appendLog('SIMULATION FORTGESETZT.');startExecutionTimer();
-}
-function stepExecution(){
-  if(!execution||execution.status!==EXEC_STATE.PAUSED)return;
-  simulateOneSecond();
-  if(execution&&execution.status===EXEC_STATE.RUNNING)setExecutionStatus(EXEC_STATE.PAUSED);
-}
-function nextEventExecution(){
-  if(!execution||execution.status!==EXEC_STATE.PAUSED)return;
-  let guard=0;
-  while(execution&&execution.status===EXEC_STATE.PAUSED&&guard++<3600){simulateOneSecond(true)}
-}
+function beginExecution(){if(!execution||execution.status!==EXEC_STATE.READY)return;appendLog('EINSATZ GESTARTET.');logInitialActorStates();setExecutionStatus(EXEC_STATE.RUNNING);startExecutionTimer()}
+function logInitialActorStates(){Object.values(execution.actors).forEach(a=>{if(a.position)appendLog(`${a.member.name} steht bei „${a.actions[0]?.node.label||'Start'}“.`)})}
+function startExecutionTimer(){clearInterval(executionTimer);const speed=Math.max(1,Number($('speedSelect')?.value||execution.speed||4));execution.speed=speed;executionTimer=setInterval(()=>{if(execution?.status===EXEC_STATE.RUNNING)simulateOneSecond()},1000/speed)}
+function changeExecutionSpeed(){if(!execution)return;execution.speed=Number($('speedSelect').value||4);if(execution.status===EXEC_STATE.RUNNING)startExecutionTimer()}
+function pauseExecution(){if(!execution||execution.status!==EXEC_STATE.RUNNING)return;clearInterval(executionTimer);executionTimer=null;setExecutionStatus(EXEC_STATE.PAUSED);appendLog('SIMULATION PAUSIERT.')}
+function continueExecution(){if(!execution||execution.status!==EXEC_STATE.PAUSED)return;setExecutionStatus(EXEC_STATE.RUNNING);appendLog('SIMULATION FORTGESETZT.');startExecutionTimer()}
+function stepExecution(){if(!execution||execution.status!==EXEC_STATE.PAUSED)return;simulateOneSecond(true)}
+function nextEventExecution(){if(!execution||execution.status!==EXEC_STATE.PAUSED)return;let guard=0;while(execution&&execution.status===EXEC_STATE.PAUSED&&guard++<3600){simulateOneSecond(true);if(execution.status===EXEC_STATE.EVENT_STOP||execution.status===EXEC_STATE.FINISHED)break}}
 function simulateOneSecond(keepPaused=false){
-  if(!execution||![EXEC_STATE.RUNNING,EXEC_STATE.PAUSED].includes(execution.status))return;
-  execution.time+=1;
-  updateActorPositions();
-  const event=findNewExecutionEvent();
-  renderExecutionFrame();
-  if(event){showExecutionEvent(event);return}
-  if(allActorsFinished()){finishMission();return}
-  if(keepPaused)setExecutionStatus(EXEC_STATE.PAUSED);
+  if(!execution||![EXEC_STATE.RUNNING,EXEC_STATE.PAUSED].includes(execution.status))return;execution.time+=1;updateActorPositionsAndLog();queueExecutionEvents();renderExecutionFrame();
+  if(execution.eventQueue.length){showExecutionEvent(execution.eventQueue.shift());return}if(allActorsFinished()){finishMission();return}if(keepPaused)setExecutionStatus(EXEC_STATE.PAUSED)
 }
-function updateActorPositions(){
-  Object.values(execution.actors).forEach(actor=>{
-    const actions=actor.actions;
-    if(!actions.length){actor.completed=true;return}
-    const t=execution.time;
-    if(t>=actions.at(-1).end){actor.position={...actions.at(-1).node};actor.completed=true;return}
-    actor.completed=false;
-    const action=actions.find(a=>t>=a.start&&t<=a.end)||actions[0];
-    const index=actions.indexOf(action);
-    if(index===0||action.duration===0){actor.position={...action.node};return}
-    const prev=actions[index-1].node;
-    const ratio=Math.max(0,Math.min(1,(t-action.start)/action.duration));
-    actor.position={x:prev.x+(action.node.x-prev.x)*ratio,y:prev.y+(action.node.y-prev.y)*ratio};
-  });
+function updateActorPositionsAndLog(){
+  Object.values(execution.actors).forEach(actor=>{const actions=actor.actions,t=execution.time;if(!actions.length){actor.completed=true;return}if(t>=actions.at(-1).end){actor.position={...actions.at(-1).node};if(!actor.completed){actor.completed=true;appendLog(`${actor.member.name} hat seine Route beendet.`)}return}actor.completed=false;let index=actions.findIndex(a=>t>=a.start&&t<=a.end);if(index<0)index=0;const action=actions[index];if(index!==actor.lastActionIndex){actor.lastActionIndex=index;if(index===0)appendLog(`${actor.member.name}: Position bezogen.`);else appendLog(`${actor.member.name} bewegt sich zu „${action.node.label}“ – ${action.action}.`)}if(index===0||action.duration===0){actor.position={...action.node};return}const prev=actions[index-1].node,ratio=Math.max(0,Math.min(1,(t-action.start)/action.duration));actor.position={x:prev.x+(action.node.x-prev.x)*ratio,y:prev.y+(action.node.y-prev.y)*ratio};if(t===action.end)appendLog(`${actor.member.name} erreicht „${action.node.label}“ und beendet: ${action.action}.`)
+  })
 }
-function findNewExecutionEvent(){
-  for(const [id,actor] of Object.entries(execution.actors)){
-    for(const action of actor.actions){
-      if(action.end!==execution.time||!action.node.objective)continue;
-      const key=`${id}:${action.node.id}:${action.end}`;
-      if(execution.handledEvents.has(key))continue;
-      execution.handledEvents.add(key);
-      return{key,title:'Zielpunkt erreicht',message:`${actor.member.name} hat „${action.node.label}“ erreicht.`,node:action.node,time:execution.time};
-    }
-  }
-  return null;
+function queueExecutionEvents(){
+  Object.entries(execution.actors).forEach(([id,actor])=>actor.actions.forEach(action=>{if(action.end!==execution.time||!action.node.objective)return;const key=`${id}:${action.node.id}:${action.end}`;if(execution.handledEvents.has(key))return;execution.handledEvents.add(key);execution.eventQueue.push({key,title:'Zielpunkt erreicht',message:`${actor.member.name} hat „${action.node.label}“ erreicht.`,node:action.node,time:execution.time})}))
 }
-function showExecutionEvent(event){
-  clearInterval(executionTimer);executionTimer=null;execution.currentEvent=event;setExecutionStatus(EXEC_STATE.EVENT_STOP);
-  $('eventTitle').textContent=event.title;$('eventMessage').textContent=`${formatTime(event.time)} – ${event.message}`;
-  $('eventDialog').classList.add('open');$('eventOkBtn').focus();appendLog(`EREIGNIS: ${event.message}`);
-}
-function acknowledgeEvent(){
-  if(!execution||execution.status!==EXEC_STATE.EVENT_STOP)return;
-  $('eventDialog').classList.remove('open');execution.currentEvent=null;setExecutionStatus(EXEC_STATE.PAUSED);
-}
+function showExecutionEvent(event){clearInterval(executionTimer);executionTimer=null;execution.currentEvent=event;setExecutionStatus(EXEC_STATE.EVENT_STOP);$('eventTitle').textContent=event.title;$('eventMessage').textContent=`${formatTime(event.time)} – ${event.message}`;$('eventDialog').classList.add('open');$('eventContinueBtn').focus();appendLog(`EREIGNIS: ${event.message}`)}
+function closeEventDialog(){ $('eventDialog').classList.remove('open');execution.currentEvent=null }
+function acknowledgeEventAndContinue(){if(!execution||execution.status!==EXEC_STATE.EVENT_STOP)return;closeEventDialog();if(execution.eventQueue.length){showExecutionEvent(execution.eventQueue.shift());return}setExecutionStatus(EXEC_STATE.RUNNING);appendLog('EREIGNIS BESTÄTIGT – SIMULATION LÄUFT WEITER.');startExecutionTimer()}
+function acknowledgeEventPaused(){if(!execution||execution.status!==EXEC_STATE.EVENT_STOP)return;closeEventDialog();if(execution.eventQueue.length){showExecutionEvent(execution.eventQueue.shift());return}setExecutionStatus(EXEC_STATE.PAUSED);appendLog('EREIGNIS BESTÄTIGT – SIMULATION BLEIBT PAUSIERT.')}
 function allActorsFinished(){return Object.values(execution.actors).every(a=>a.completed)}
-function renderExecutionFrame(){
-  if(!execution)return;
-  const positions={};Object.entries(execution.actors).forEach(([id,a])=>{if(a.position)positions[id]=a.position});
-  renderBaseMap($('executionMap'),false,positions);
-  $('execClock').textContent=formatTime(execution.time);
-  const max=Math.max(1,...Object.values(execution.actors).map(a=>a.actions.at(-1)?.end||0));
-  $('progressBar').style.width=`${Math.min(100,execution.time/max*100)}%`;
-}
+function renderExecutionFrame(){if(!execution)return;const positions={};Object.entries(execution.actors).forEach(([id,a])=>{if(a.position)positions[id]=a.position});renderBaseMap($('executionMap'),false,positions);$('execClock').textContent=formatTime(execution.time);const max=Math.max(1,...Object.values(execution.actors).map(a=>a.actions.at(-1)?.end||0));$('progressBar').style.width=`${Math.min(100,execution.time/max*100)}%`}
 function appendLog(text){if(!$('log'))return;$('log').textContent+=`${formatTime(execution?.time||0)}  ${text}\n`;$('log').scrollTop=$('log').scrollHeight}
-function finishMission(){
-  clearInterval(executionTimer);executionTimer=null;if(!execution)return;setExecutionStatus(EXEC_STATE.FINISHED);
-  state.money+=currentMission.reward;state.completed[currentMission.id]=true;save();
-  $('resultTitle').innerHTML='<span class="result-success">COUP GELUNGEN</span>';
-  $('resultText').innerHTML=`<p>Der deterministische Musterablauf wurde vollständig ausgeführt.</p><p>Beute: <strong>${fmt.format(currentMission.reward)}</strong></p><p>Dauer: <strong>${formatTime(execution.time)}</strong></p>`;
-  showScreen('result');
-}
-function abortMission(){
-  clearInterval(executionTimer);executionTimer=null;if(execution)execution.status=EXEC_STATE.ABORTED;$('eventDialog').classList.remove('open');
-  $('resultTitle').innerHTML='<span class="result-fail">EINSATZ ABGEBROCHEN</span>';$('resultText').innerHTML='<p>Die Bande hat sich ohne Beute zurückgezogen.</p>';showScreen('result')
-}
-function returnToPlanning(){
-  if(execution?.status===EXEC_STATE.RUNNING)return;
-  clearInterval(executionTimer);executionTimer=null;$('eventDialog').classList.remove('open');openPlanning(state.currentMission);
-}
+function finishMission(){clearInterval(executionTimer);executionTimer=null;if(!execution)return;appendLog('ALLE ROUTEN BEENDET. EINSATZ ERFOLGREICH.');setExecutionStatus(EXEC_STATE.FINISHED);state.money+=currentMission.reward;state.completed[currentMission.id]=true;save();$('resultTitle').innerHTML='<span class="result-success">COUP GELUNGEN</span>';$('resultText').innerHTML=`<p>Der deterministische Musterablauf wurde vollständig ausgeführt.</p><p>Beute: <strong>${fmt.format(currentMission.reward)}</strong></p><p>Dauer: <strong>${formatTime(execution.time)}</strong></p>`;showScreen('result')}
+function abortMission(){clearInterval(executionTimer);executionTimer=null;if(execution)execution.status=EXEC_STATE.ABORTED;$('eventDialog').classList.remove('open');$('resultTitle').innerHTML='<span class="result-fail">EINSATZ ABGEBROCHEN</span>';$('resultText').innerHTML='<p>Die Bande hat sich ohne Beute zurückgezogen.</p>';showScreen('result')}
+function returnToPlanning(){if(execution?.status===EXEC_STATE.RUNNING)return;clearInterval(executionTimer);executionTimer=null;$('eventDialog').classList.remove('open');openPlanning(state.currentMission)}
 function restartCurrent(){openPlanning(state.currentMission)}
 function setGodMode(){getPlan().godMode=$('godModeToggle').checked;save();renderMap()}
-window.CoupGame={load,newGame,continueGame,showScreen,showHQ,autoPlan,startMission,beginExecution,pauseExecution,continueExecution,stepExecution,nextEventExecution,acknowledgeEvent,returnToPlanning,abortMission,restartCurrent,undoWaypoint,clearRoute,clearAllRoutes,simulatePlan,savePlan,setGodMode,renderMap,updateCost};
+window.CoupGame={load,newGame,continueGame,showScreen,showHQ,autoPlan,startMission,beginExecution,pauseExecution,continueExecution,stepExecution,nextEventExecution,acknowledgeEventAndContinue,acknowledgeEventPaused,changeExecutionSpeed,returnToPlanning,abortMission,restartCurrent,undoWaypoint,clearRoute,clearAllRoutes,simulatePlan,savePlan,setGodMode,renderMap,updateCost,debugSnapshot:()=>execution?{status:execution.status,time:execution.time,queue:execution.eventQueue.length,log:$('log')?.textContent||'',screen:[...document.querySelectorAll('.screen')].find(s=>s.classList.contains('active'))?.id}:null};
 })();
