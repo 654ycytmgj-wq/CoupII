@@ -1,26 +1,19 @@
 # Der große Coup
 
-Installierbare Retro-Taktiksimulation als Progressive Web App für iPad und Mac.
+Browserbasierte Retro-Taktiksimulation mit grafischer Einbruchsplanung.
 
-## Aktueller Stand: Version 0.2.2
+## Aktuelle Version
 
-- zwei grafische Gebäudegrundrisse
-- interaktive Wegpunktplanung per Touch oder Maus
-- getrennte Routen für jedes Teammitglied
-- automatisch berechnete Aktionen und Zeitachse
-- Musterpläne für beide Missionen
-- erster God-Modus mit Planprüfung, Fehlern, Warnungen und Erfolgschance
-- animierte Durchführung des tatsächlich geplanten Ablaufs
-- lokaler Spielstand und lokale Missionspläne
-- Offline-Betrieb als installierte Web-App
+**0.2.2-RC1** – Neuimplementierung der Aktions- und Simulationssteuerung auf Basis von 0.2.1.
 
-## Bedienung
+Enthalten sind:
 
-1. Mission öffnen.
-2. Links ein Teammitglied wählen.
-3. Auf der Karte zunächst den Fluchtwagen und danach jeweils verbundene Wegpunkte antippen.
-4. Für weitere Teammitglieder eigene Routen anlegen.
-5. **Plan prüfen** verwenden.
-6. Kritische Fehler beseitigen und den Einsatz starten.
+- getrennte Weg- und Warteaktionen,
+- Wartezeiten in der Zeitleiste,
+- Prüfung gleichzeitiger Türbelegung,
+- segmentierte Mehrpersonenmarker,
+- Pause, Fortsetzen, Einzelschritt und Sprung zum nächsten Ereignis,
+- bestätigungspflichtige Fehlerdialoge,
+- getrennte God-Modus-Funktionen für Teamempfehlung, Musterplan und Planprüfung.
 
-Die ausführliche Update-Anleitung befindet sich unter [`docs/UPDATE-0.2.2.md`](docs/UPDATE-0.2.2.md).
+Die Installations- und Abnahmeanleitung befindet sich in `docs/UPDATE-0.2.2-RC1.md`.
