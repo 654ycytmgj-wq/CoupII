@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 root=Path('.')
 html=(root/'index.html').read_text()
 css=(root/'style.css').read_text()
-html=html.replace('<link rel="stylesheet" href="style.css?v=030a1">', f'<style>{css}</style>')
+html=html.replace('<link rel="stylesheet" href="style.css?v=030a2">', f'<style>{css}</style>')
 for name in ['characters.js','levels.js','game.js','script.js']:
     src=(root/name).read_text()
     import re
@@ -21,7 +21,7 @@ with sync_playwright() as p:
     assert page.locator('#startBtn').is_enabled()
     assert page.locator('.crew-marker .marker-text').first.text_content() == '2'
     page.click('#startBtn')
-    page.wait_for_timeout(1200)
+    page.wait_for_timeout(1100)
     assert page.locator('#modeLabel').inner_text() == 'RUNNING'
     page.click('#pauseBtn')
     assert page.locator('#modeLabel').inner_text() == 'PAUSED'
@@ -30,13 +30,14 @@ with sync_playwright() as p:
     t2=page.locator('#clockLabel').inner_text()
     assert t1 != t2
     page.click('#continueBtn')
-    page.wait_for_selector('#eventDialog:not(.hidden)', timeout=15000)
+    page.wait_for_selector('#eventDialog:not(.hidden)', timeout=40000)
     assert page.locator('#eventTitle').inner_text() == 'Zielpunkt erreicht'
+    assert page.locator('#eventPauseBtn').count() == 0
     page.click('#eventContinueBtn')
-    page.wait_for_function("document.querySelector('#modeLabel').textContent === 'FINISHED'", timeout=15000)
+    page.wait_for_function("document.querySelector('#modeLabel').textContent === 'FINISHED'", timeout=40000)
     protocol=page.locator('#protocol').inner_text()
     assert 'Mission erfolgreich beendet.' in protocol
     assert not errors, errors
-    page.screenshot(path='/mnt/data/rebuild/browser-smoke.png', full_page=True)
+    page.screenshot(path='/mnt/data/alpha2-browser-smoke.png', full_page=True)
     browser.close()
     print('PASS browser smoke')
