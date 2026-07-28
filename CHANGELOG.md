@@ -1,12 +1,12 @@
-# Änderungsprotokoll
+# Änderungsverlauf
 
-## 0.2.2-RC2-core
+## 0.3.0-alpha.1
 
-- Neuaufbau auf Basis von 0.2.1.
-- Bisherige zeitgesteuerte Aktionsliste durch eine zentrale Zustandsmaschine ersetzt.
-- Automatik und Einzelschritt verwenden dieselbe Funktion `simulateOneSecond()`.
-- Pause stoppt den zentralen Timer unmittelbar.
-- Ereignisse halten die Simulation an und verlangen eine Bestätigung.
-- Nach OK verbleibt die Simulation im pausierten Zustand.
-- Rückkehr zur Planung erhält den aktuellen Plan.
-- Missionserfolg ist im Kern deterministisch; Zufallswürfe wurden entfernt.
+- Neustart auf Basis von 0.2.1
+- strukturierte Aktionslisten als interne Planungsgrundlage
+- automatische Wegberechnung auf der Karte
+- neuer deterministischer Simulationskern
+- funktionale Zustandsmaschine
+- Referenzplan und automatisierte Kernprüfung
+- segmentierte Mehrpersonenmarker
+- vereinfachte PWA-Cache-Versionierung

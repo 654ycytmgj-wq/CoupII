@@ -1,5 +1,10 @@
-const CACHE_NAME='der-grosse-coup-v0.2.2-rc2-core-1';
-const APP_FILES=['./','./index.html','./style.css','./script.js','./game.js','./levels.js','./characters.js','./equipment.js','./manifest.webmanifest','./assets/icons/icon-180.png','./assets/icons/icon-192.png','./assets/icons/icon-512.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(APP_FILES)));self.skipWaiting()});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim()});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE_NAME).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)))})
+const CACHE = 'der-grosse-coup-030a1';
+const ASSETS = ['./','./index.html','./style.css?v=030a1','./script.js?v=030a1','./game.js?v=030a1','./levels.js?v=030a1','./characters.js?v=030a1','./manifest.webmanifest'];
+self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS))); self.skipWaiting(); });
+self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(fetch(event.request).then(response => {
+    const copy = response.clone(); caches.open(CACHE).then(cache => cache.put(event.request, copy)); return response;
+  }).catch(() => caches.match(event.request)));
+});

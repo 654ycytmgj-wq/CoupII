@@ -1,27 +1,32 @@
 # Der große Coup
 
-## Version 0.2.2-RC2-core.1
+## Version 0.3.0-alpha.1
 
-Dieser Release-Kandidat basiert auf **0.2.1** und ersetzt ausschließlich den bisherigen Simulationsablauf durch einen deterministischen Kern.
+Architektonischer Neustart auf Basis von Version 0.2.1.
 
-Enthalten:
+Dieser Stand enthält bewusst nur den Tabakladen, zwei Figuren und einen deterministischen Simulationskern. Die Planung erfolgt weiterhin direkt auf der Karte, wird intern jedoch als strukturierte Aktionsliste gespeichert.
 
-- zentrale Simulationszustände
-- Start, Pause und Fortsetzen
-- Einzelschritt um exakt eine Simulationssekunde
-- Sprung bis zum nächsten Ereignis
-- Ereignisstopp mit bestätigungspflichtigem OK-Dialog
-- Rückkehr zur Planung unter Erhalt des Plans
-- kontinuierliche Positionsberechnung zwischen Wegpunkten
-- deterministischer Abschluss ohne Zufallswurf
+### Enthalten
 
-Bewusst noch nicht enthalten sind die für spätere Pakete vorgesehenen erweiterten Warte-, Tür-, Engstellen-, Alarm- und God-Modus-Funktionen.
+- Person auswählen und Kartenpunkte antippen
+- automatische Wegberechnung
+- strukturierte Aktionslisten
+- Warten für 5 oder 10 Sekunden
+- Referenzplan
+- Planprüfung
+- Start, Pause, Fortsetzen, Einzelschritt und nächstes Ereignis
+- segmentierte Marker bei gleicher Position
+- laufendes Einsatzprotokoll
+- bestätigungspflichtiges Zielereignis
+- deterministischer Missionsabschluss ohne Zufall
 
-Die GitHub-Aktualisierung steht in `docs/UPDATE-0.2.2-RC2-core.1.md`.
+### Bewusst nicht enthalten
 
+- Alarmanlage
+- Türen und Engstellenkonflikte
+- Safe
+- Wachpersonal
+- zweites Level
+- God-Modus und Teamempfehlung
 
-### Korrekturen in core.1
-- Standardtempo 4×, umschaltbar auf 1×/2×/4×/8×
-- laufendes Ereignisprotokoll
-- segmentierte Mehrpersonenmarker
-- Ereignisdialog mit Fortsetzen oder pausiertem Prüfen
+Siehe `docs/UPDATE-0.3.0-alpha.1.md`.
