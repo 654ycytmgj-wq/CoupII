@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Der große Coup">
-  <title>Der große Coup 0.2.2-RC1</title>
+  <title>Der große Coup 0.2.2-RC2-core</title>
   <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
@@ -18,51 +18,168 @@
     <div class="panel title-panel">
       <div class="eyebrow">RETRO-TAKTIKSIMULATION</div>
       <h1>DER GROSSE COUP</h1>
-      <div class="subtitle">Version 0.2.2-RC1 · stabile Aktions- und Simulationssteuerung</div>
-      <p>Plane Wege und Wartezeiten direkt auf dem Gebäudegrundriss und prüfe den Ablauf schrittweise.</p>
-      <div class="row"><button id="newGameBtn" class="primary">Neues Spiel</button><button id="continueBtn">Fortsetzen</button></div>
+      <div class="subtitle">Version 0.2.2-RC2-core · Stabiler Simulationskern</div>
+      <p>Plane die Wege Deiner Spezialisten direkt auf dem Gebäudegrundriss. Der Einsatz folgt anschließend genau Deinem Plan.</p>
+      <div class="row">
+        <button id="newGameBtn" class="primary">Neues Spiel</button>
+        <button id="continueBtn">Fortsetzen</button>
+      </div>
     </div>
+    <div class="panel small">Spielstand und Missionspläne werden lokal auf diesem Gerät gespeichert.</div>
   </section>
 
   <section id="hq" class="screen">
-    <header class="panel topbar"><div><div class="eyebrow">HAUPTQUARTIER</div><h2>Auftragskartei</h2></div><div class="row"><div class="stat">Kapital <strong id="money">10.000 €</strong></div><div class="stat">Fahndung <strong id="heat">0/5</strong></div><div class="version-tag">v0.2.2-RC1</div></div></header>
-    <div id="missionList"></div><button id="backToTitleBtn">Zum Titel</button>
+    <header class="panel topbar">
+      <div>
+        <div class="eyebrow">HAUPTQUARTIER</div>
+        <h2>Auftragskartei</h2>
+      </div>
+      <div class="row">
+        <div class="stat">Kapital <strong id="money">10.000 €</strong></div>
+        <div class="stat">Fahndung <strong id="heat">0/5</strong></div>
+        <div class="version-tag">v0.2.2-RC2-core</div>
+      </div>
+    </header>
+    <div id="missionList"></div>
+    <button id="backToTitleBtn">Zum Titel</button>
   </section>
 
   <section id="planning" class="screen planning-screen">
-    <header class="panel mission-header"><div><div class="eyebrow">MISSIONSPLANUNG</div><h2 id="planTitle"></h2><p id="planDesc"></p></div><div class="mission-stats"><div class="stat">Budget <strong id="budget"></strong></div><div class="stat">Planzeit <strong id="planDuration">00:00</strong></div><div class="stat">Planstatus <strong id="planStatus">Ungeprüft</strong></div></div></header>
+    <header class="panel mission-header">
+      <div>
+        <div class="eyebrow">MISSIONSPLANUNG</div>
+        <h2 id="planTitle"></h2>
+        <p id="planDesc"></p>
+      </div>
+      <div class="mission-stats">
+        <div class="stat">Budget <strong id="budget"></strong></div>
+        <div class="stat">Planzeit <strong id="planDuration">00:00</strong></div>
+        <div class="stat">Planstatus <strong id="planStatus">Ungeprüft</strong></div>
+      </div>
+    </header>
+
     <div class="planning-layout">
       <aside class="panel side-panel">
-        <h3>Team</h3><p class="small">Person wählen, dann verbundene Kartenpunkte antippen.</p><div id="crewList" class="crew-list"></div>
-        <h3 class="section-title">Aktionen</h3>
-        <label for="waitSeconds">Warten am letzten Punkt</label>
-        <div class="row compact"><select id="waitSeconds"><option value="5">5 Sekunden</option><option value="10" selected>10 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option><option value="60">60 Sekunden</option></select><button id="addWaitBtn">Warten einfügen</button></div>
-        <button id="removeLastActionBtn">Letzte Aktion löschen</button>
-        <h3 class="section-title">Ausrüstung</h3><label for="toolSelect">Werkzeug</label><select id="toolSelect"></select><label for="carSelect">Fahrzeug</label><select id="carSelect"></select><div id="costSummary" class="cost-summary"></div>
+        <h3>Team</h3>
+        <p class="small">Figur antippen, anschließend verbundene Punkte auf der Karte wählen.</p>
+        <div id="crewList" class="crew-list"></div>
+        <h3 class="section-title">Ausrüstung</h3>
+        <label for="toolSelect">Werkzeug</label>
+        <select id="toolSelect"></select>
+        <label for="carSelect">Fahrzeug</label>
+        <select id="carSelect"></select>
+        <div id="costSummary" class="cost-summary"></div>
       </aside>
+
       <section class="panel map-panel">
-        <div class="map-toolbar"><div class="legend"><span><i class="legend-dot entry"></i>Zugang</span><span><i class="legend-dot objective"></i>Ziel</span><span><i class="legend-dot hazard"></i>Gefahr</span><span><i class="legend-dot exit"></i>Flucht</span></div><div class="row compact"><button id="undoWaypointBtn">Letzten Wegpunkt löschen</button><button id="clearRouteBtn">Route leeren</button><button id="clearAllRoutesBtn">Alle Routen leeren</button></div></div>
-        <div id="mapFrame" class="map-frame"><svg id="missionMap" viewBox="0 0 1000 620" role="img" aria-label="Gebäudegrundriss"></svg></div><div id="mapHint" class="map-hint">Wähle links ein Teammitglied.</div>
+        <div class="map-toolbar">
+          <div class="legend">
+            <span><i class="legend-dot entry"></i>Zugang</span>
+            <span><i class="legend-dot objective"></i>Ziel</span>
+            <span><i class="legend-dot hazard"></i>Gefahr</span>
+            <span><i class="legend-dot exit"></i>Flucht</span>
+          </div>
+          <div class="row compact">
+            <button id="undoWaypointBtn">Letzten Punkt löschen</button>
+            <button id="clearRouteBtn">Route leeren</button>
+            <button id="clearAllRoutesBtn">Alle Routen leeren</button>
+          </div>
+        </div>
+        <div id="mapFrame" class="map-frame" aria-label="Interaktiver Gebäudeplan">
+          <svg id="missionMap" viewBox="0 0 1000 620" role="img" aria-label="Gebäudegrundriss"></svg>
+        </div>
+        <div id="mapHint" class="map-hint">Wähle links ein Teammitglied.</div>
       </section>
+
       <aside class="panel info-panel">
-        <h3>Zielinformationen</h3><div id="missionInfo"></div>
-        <h3 class="section-title">God-Modus</h3><label class="switch-row"><input id="godModeToggle" type="checkbox"> Entwickleranzeige aktivieren</label>
-        <div class="god-options"><label><input id="showHazards" type="checkbox" checked> Gefahrenzonen</label><label><input id="showConnections" type="checkbox" checked> Verbindungen</label><label><input id="showTimes" type="checkbox" checked> Zeiten</label></div>
-        <button id="recommendTeamBtn" class="god-button">Team empfehlen</button><button id="autoPlanBtn" class="god-button">Musterplan laden</button><button id="simulatePlanBtn" class="god-button">Plan prüfen</button><div id="godReport" class="god-report">Noch keine Prüfung durchgeführt.</div>
+        <h3>Zielinformationen</h3>
+        <div id="missionInfo"></div>
+        <h3 class="section-title">God-Modus</h3>
+        <label class="switch-row"><input id="godModeToggle" type="checkbox"> Entwickleranzeige aktivieren</label>
+        <div class="god-options">
+          <label><input id="showHazards" type="checkbox" checked> Gefahrenzonen</label>
+          <label><input id="showConnections" type="checkbox" checked> Verbindungen</label>
+          <label><input id="showTimes" type="checkbox" checked> Zeiten</label>
+        </div>
+        <button id="simulatePlanBtn" class="god-button">Plan prüfen</button>
+        <div id="godReport" class="god-report">Noch keine Prüfung durchgeführt.</div>
       </aside>
     </div>
-    <section class="panel timeline-panel"><div class="row timeline-heading"><h3>Einsatzplan – Zeitleiste</h3><div class="small">Wartezeiten erscheinen als eigene Blöcke.</div></div><div id="timelineGrid" class="timeline-grid"></div><div class="row actionbar"><button id="savePlanBtn">Plan speichern</button><button id="startMissionBtn" class="primary">Einsatz starten</button><button id="cancelPlanningBtn">Zurück</button></div></section>
+
+    <section class="panel timeline-panel">
+      <div class="row timeline-heading">
+        <h3>Einsatzplan – Zeitleiste</h3>
+        <div class="small">Karte und Zeitleiste werden automatisch synchronisiert.</div>
+      </div>
+      <div id="timelineGrid" class="timeline-grid"></div>
+      <div class="row actionbar">
+        <button id="autoPlanBtn">Musterplan laden</button>
+        <button id="savePlanBtn">Plan speichern</button>
+        <button id="startMissionBtn" class="primary">Einsatz starten</button>
+        <button id="cancelPlanningBtn">Zurück</button>
+      </div>
+    </section>
   </section>
 
   <section id="execution" class="screen">
-    <header class="panel"><div class="row"><div class="grow"><div class="eyebrow">DURCHFÜHRUNG</div><h2 id="execTitle"></h2></div><div class="stat">Zeit <strong id="execClock">00:00</strong></div><div class="stat">Alarm <strong id="alarm">0/5</strong></div></div><div class="progress"><div id="progressBar"></div></div></header>
-    <div class="panel sim-controls"><button id="playPauseBtn" class="primary">Pause</button><button id="stepSecondBtn">+1 Sekunde</button><button id="nextEventBtn">Nächstes Ereignis</button><label for="speedSelect">Tempo</label><select id="speedSelect"><option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option></select><span id="simState" class="badge">Läuft</span></div>
-    <div class="execution-layout"><div class="panel map-panel"><svg id="executionMap" viewBox="0 0 1000 620"></svg></div><div class="panel"><h3>Einsatzprotokoll</h3><div id="log" class="log" aria-live="polite"></div></div></div><button id="abortBtn" class="danger">Einsatz abbrechen</button>
+    <header class="panel">
+      <div class="row">
+        <div class="grow">
+          <div class="eyebrow">DURCHFÜHRUNG</div>
+          <h2 id="execTitle"></h2>
+        </div>
+        <div class="stat">Zeit <strong id="execClock">00:00</strong></div>
+        <div class="stat">Alarm <strong id="alarm">0/5</strong></div>
+      </div>
+      <div class="progress"><div id="progressBar"></div></div>
+    </header>
+    <div class="execution-layout">
+      <div class="panel map-panel"><svg id="executionMap" viewBox="0 0 1000 620"></svg></div>
+      <div class="panel"><h3>Einsatzprotokoll</h3><div id="log" class="log" aria-live="polite"></div></div>
+    </div>
+    <section class="panel execution-controls" aria-label="Simulationssteuerung">
+      <div class="row controls-wrap">
+        <button id="execStartBtn" class="primary">Start</button>
+        <button id="execPauseBtn">Pause</button>
+        <button id="execContinueBtn">Fortsetzen</button>
+        <button id="execStepBtn">+1 Sekunde</button>
+        <button id="execNextEventBtn">Nächstes Ereignis</button>
+        <button id="backToPlanningBtn">Zur Planung</button>
+        <button id="abortBtn" class="danger">Einsatz abbrechen</button>
+      </div>
+      <div class="small">Status: <strong id="execStatus">READY</strong></div>
+    </section>
   </section>
 
-  <section id="result" class="screen"><div class="panel result-panel"><h2 id="resultTitle"></h2><div id="resultText"></div><div class="row top-gap"><button id="resultToHqBtn" class="primary">Zum Hauptquartier</button><button id="restartBtn">Mission erneut planen</button></div></div></section>
-</main>
+  <div id="eventDialog" class="event-dialog" role="dialog" aria-modal="true" aria-labelledby="eventTitle">
+    <div class="panel event-dialog-card">
+      <div class="eyebrow">SIMULATION ANGEHALTEN</div>
+      <h2 id="eventTitle">Ereignis</h2>
+      <p id="eventMessage"></p>
+      <div class="row controls-wrap">
+        <button id="eventOkBtn" class="primary">OK</button>
+        <button id="eventPlanningBtn">Zur Planung</button>
+        <button id="eventAbortBtn" class="danger">Abbrechen</button>
+      </div>
+      <p class="small">Nach „OK“ bleibt die Simulation pausiert. Danach kann sie fortgesetzt oder schrittweise geprüft werden.</p>
+    </div>
+  </div>
 
-<div id="eventModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="eventTitle"><div class="panel modal-card"><h2 id="eventTitle">Ereignis</h2><p id="eventMessage"></p><div class="row"><button id="eventOkBtn" class="primary">OK</button><button id="eventPlanBtn">Zur Planung</button><button id="eventAbortBtn" class="danger">Abbrechen</button></div></div></div>
-<script src="characters.js"></script><script src="equipment.js"></script><script src="levels.js"></script><script src="game.js"></script><script src="script.js"></script>
-</body></html>
+  <section id="result" class="screen">
+    <div class="panel result-panel">
+      <h2 id="resultTitle"></h2>
+      <div id="resultText"></div>
+      <div class="row top-gap">
+        <button id="resultToHqBtn" class="primary">Zum Hauptquartier</button>
+        <button id="restartBtn">Mission erneut planen</button>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="characters.js"></script>
+<script src="equipment.js"></script>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

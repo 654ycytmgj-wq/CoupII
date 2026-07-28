@@ -1,19 +1,20 @@
 # Der große Coup
 
-Browserbasierte Retro-Taktiksimulation mit grafischer Einbruchsplanung.
+## Version 0.2.2-RC2-core
 
-## Aktuelle Version
+Dieser Release-Kandidat basiert auf **0.2.1** und ersetzt ausschließlich den bisherigen Simulationsablauf durch einen deterministischen Kern.
 
-**0.2.2-RC1** – Neuimplementierung der Aktions- und Simulationssteuerung auf Basis von 0.2.1.
+Enthalten:
 
-Enthalten sind:
+- zentrale Simulationszustände
+- Start, Pause und Fortsetzen
+- Einzelschritt um exakt eine Simulationssekunde
+- Sprung bis zum nächsten Ereignis
+- Ereignisstopp mit bestätigungspflichtigem OK-Dialog
+- Rückkehr zur Planung unter Erhalt des Plans
+- kontinuierliche Positionsberechnung zwischen Wegpunkten
+- deterministischer Abschluss ohne Zufallswurf
 
-- getrennte Weg- und Warteaktionen,
-- Wartezeiten in der Zeitleiste,
-- Prüfung gleichzeitiger Türbelegung,
-- segmentierte Mehrpersonenmarker,
-- Pause, Fortsetzen, Einzelschritt und Sprung zum nächsten Ereignis,
-- bestätigungspflichtige Fehlerdialoge,
-- getrennte God-Modus-Funktionen für Teamempfehlung, Musterplan und Planprüfung.
+Bewusst noch nicht enthalten sind die für spätere Pakete vorgesehenen erweiterten Warte-, Tür-, Engstellen-, Alarm- und God-Modus-Funktionen.
 
-Die Installations- und Abnahmeanleitung befindet sich in `docs/UPDATE-0.2.2-RC1.md`.
+Die GitHub-Aktualisierung steht in `docs/UPDATE-0.2.2-RC2-core.md`.
